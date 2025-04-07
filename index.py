@@ -3,13 +3,23 @@ import webbrowser
 import time
 import csv
 import pyautogui
+import tkinter as tk
+import threading
+import sys
 
-# variables
-dataFile = "example.csv"
-waitingDuration = 8  # Total wait time before sending message
-initialLoadWait = 5  # Time to wait after opening the link before sending ENTER
-# Message template
-template = """Bismillah
+# --- GLOBAL FLAG ---
+abort_flag = False
+root = None  # Global variable to access Tkinter window
+
+# --- FUNCTION TO SEND WHATSAPP MESSAGES ---
+def send_whatsapp_messages():
+    global abort_flag
+
+    dataFile = "example.csv"
+    waitingDuration = 8
+    initialLoadWait = 5
+
+    template = """Bismillah
 
 Punten ngawagel, bade nguningakeun, perihal iuran anggota Pemuda Persis, antum atas nami:
 
@@ -24,45 +34,71 @@ Bade janjian dina Jialing wengi ayeuna cash 💰 atanapi di TF 🏧 mangga pisan
 Jazakallah, sing diluaskeun rezekina, digampilkeun sagala urusanna sareng dipasihan kasehatan.
 Hatur nuhun"""
 
-# Load CSV
-df = pd.read_csv(dataFile, dtype={"npa": str, "phone": str, "status": str})
+    df = pd.read_csv(dataFile, dtype={"npa": str, "phone": str, "status": str})
 
-if "message" not in df.columns:
-    df["message"] = ""
+    if "message" not in df.columns:
+        df["message"] = ""
 
-for index, row in df.iterrows():
-    if row["status"] in ["sent", "skip"]:
-        continue
+    for index, row in df.iterrows():
+        if abort_flag:
+            print("🛑 Aborted by user.")
+            break
 
-    name = row["name"]
-    npa = row["npa"]
-    phone = str(row["phone"]).strip()
+        if row["status"] in ["sent", "skip"]:
+            continue
 
-    if not phone or phone == "nan":
-        print(f"❌ Skipping {name}: No phone number")
-        continue
+        name = row["name"]
+        npa = row["npa"]
+        phone = str(row["phone"]).strip()
 
-    message = template.format(name=name, npa=npa)
-    df.at[index, "message"] = message
+        if not phone or phone == "nan":
+            print(f"❌ Skipping {name}: No phone number")
+            continue
 
-    encoded_message = message.replace(" ", "%20").replace("\n", "%0A")
-    whatsapp_link = f"https://wa.me/{phone}?text={encoded_message}"
+        message = template.format(name=name, npa=npa)
+        df.at[index, "message"] = message
 
-    print(f"📨 Opening WhatsApp link for {name} ({phone})...")
-    webbrowser.open(whatsapp_link)
+        encoded_message = message.replace(" ", "%20").replace("\n", "%0A")
+        whatsapp_link = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_message}"
 
-    # Wait for the page to load (tweak this value as needed)
-    time.sleep(initialLoadWait)
+        print(f"📨 Opening WhatsApp Web for {name} ({phone})...")
+        webbrowser.open(whatsapp_link)
 
-    # pyautogui.alert("Sending message... Please do not touch mouse or keyboard")
+        time.sleep(initialLoadWait)
+        pyautogui.press("enter")
+        print(f"✅ Message sent to {name}")
 
-    # Press Enter to send message
-    pyautogui.press("enter")
-    print(f"✅ Message sent to {name}")
+        time.sleep(waitingDuration)
 
-    time.sleep(waitingDuration)  # wait before processing next
+        df.at[index, "status"] = "sent"
+        print("📂 Saving results to result.csv")
+        df.to_csv("result.csv", index=False, quoting=csv.QUOTE_ALL)
 
-    df.at[index, "status"] = "sent"
-    df.to_csv("result.csv", index=False, quoting=csv.QUOTE_ALL)
+    print("🎉 Done sending messages.")
+    abort_flag = True
+    if root:
+        root.destroy()
+    sys.exit(0)
 
-print("🎉 All messages sent and status updated!")
+# --- TKINTER MAIN THREAD ---
+def run_gui():
+    def on_abort():
+        global abort_flag
+        abort_flag = True
+        root.destroy()
+
+    global root
+    root = tk.Tk()
+    root.title("WhatsApp Sender")
+    root.geometry("250x100")
+    tk.Label(root, text="Sending messages...").pack(pady=5)
+    tk.Button(root, text="Abort", fg="white", bg="red", command=on_abort).pack(pady=10)
+
+    # Start message sending in background thread
+    threading.Thread(target=send_whatsapp_messages, daemon=True).start()
+
+    root.mainloop()
+
+# Start the GUI in the main thread
+if __name__ == "__main__":
+    run_gui()
