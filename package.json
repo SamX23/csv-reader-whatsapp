@@ -1,0 +1,15 @@
+{
+  "name": "csv-reader-whatsapp",
+  "version": "1.0.0",
+  "main": "index.py",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "SamX23",
+  "license": "ISC",
+  "description": "",
+  "repository": {
+    "url": "https://github.com/SamX23/csv-reader-whatsapp.git",
+    "type": "git"
+  }
+}
