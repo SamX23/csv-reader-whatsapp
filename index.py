@@ -19,21 +19,6 @@ def send_whatsapp_messages():
     waitingDuration = 8
     initialLoadWait = 5
 
-    template = """Bismillah
-
-Punten ngawagel, bade nguningakeun, perihal iuran anggota Pemuda Persis, antum atas nami:
-
-- Nama : {name}           
-- NPA : {npa}       
-
-Diantos kanggo iuranna.
-Bilih bade bayar anu bulan bulan kapengger oge mangga, tiasa diwaler ka ana bilih bade ninggal iuranna atos sabaraha wae, atanapi bade sakantenan infaq kanggo meringankan anu sanesna mangga ditampi pisan.
-
-Bade janjian dina Jialing wengi ayeuna cash 💰 atanapi di TF 🏧 mangga pisan.
-
-Jazakallah, sing diluaskeun rezekina, digampilkeun sagala urusanna sareng dipasihan kasehatan.
-Hatur nuhun"""
-
     df = pd.read_csv(dataFile, dtype={"npa": str, "phone": str, "status": str})
 
     if "message" not in df.columns:
@@ -55,7 +40,30 @@ Hatur nuhun"""
             print(f"❌ Skipping {name}: No phone number")
             continue
 
-        message = template.format(name=name, npa=npa)
+        npa_str = str(npa).strip() if pd.notna(npa) else ""
+        has_npa = npa_str and npa_str.lower() != "nan"
+        
+        npa_line = f"- NPA : {npa_str}\n" if has_npa else ""
+        link_section = "\nTiasa dicek iuran na masing masing dina link ieu: https://s.id/cek-iwa\nOge bade nguningakeun kanggo infaq wajib muktamar kanggo anggota nyaeta *Rp. 150.000 (Dapat Kaos Muktamar)* tiasa dicicil kanggo disetor akhir bulan Februari." if has_npa else ""
+
+        message = f"""
+Bismillah
+
+Punten ngawagel, bade nguningakeun, perihal iuran wajib anggota Pemuda Persis, antum atas nami:
+
+- Nama : {name}
+{npa_line}
+
+Diantos kanggo iuranna.
+Bilih bade bayar anu bulan bulan kapengker oge mangga, tiasa diwaler ka ana bilih bade ninggal iuranna atos sabaraha wae, atanapi bade sakantenan infaq kanggo meringankan anu sanesna mangga ditampi pisan.
+
+Bade janjian dina Jialing cash 💰, dijemput, atanapi di TF 🏧 mangga pisan.
+{link_section}
+
+Jazakallah, sing diluaskeun rezekina, digampilkeun sagala urusanna sareng dipasihan kasehatan.
+Hatur nuhun
+""".strip()
+        
         df.at[index, "message"] = message
 
         encoded_message = message.replace(" ", "%20").replace("\n", "%0A")
