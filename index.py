@@ -17,7 +17,7 @@ def send_whatsapp_messages():
 
     dataFile = "example.csv"
     waitingDuration = 8
-    initialLoadWait = 5
+    initialLoadWait = 8  # Increased from 5 to allow WhatsApp Web to fully load
 
     df = pd.read_csv(dataFile, dtype={"npa": str, "phone": str, "status": str})
 
@@ -49,15 +49,15 @@ def send_whatsapp_messages():
         message = f"""
 Bismillah
 
-Punten ngawagel, bade nguningakeun, perihal iuran wajib anggota Pemuda Persis, antum atas nami:
+Bade nguningakeun, perihal iuran wajib anggota Pemuda Persis, antum atas nami:
 
 - Nama : {name}
 {npa_line}
 
 Diantos kanggo iuranna.
-Bilih bade bayar anu bulan bulan kapengker oge mangga, tiasa diwaler ka ana bilih bade ninggal iuranna atos sabaraha wae, atanapi bade sakantenan infaq kanggo meringankan anu sanesna mangga ditampi pisan.
+Bilih bade bayar anu bulan bulan kapengker oge mangga, atanapi bade sakantenan infaq kanggo meringankan anu sanesna mangga ditampi pisan.
 
-Bade janjian dina Jialing cash 💰, dijemput, atanapi di TF 🏧 mangga pisan.
+Bade janjian cash 💰, dijemput, atanapi di TF 🏧 mangga pisan.
 {link_section}
 
 Jazakallah, sing diluaskeun rezekina, digampilkeun sagala urusanna sareng dipasihan kasehatan.
